@@ -1,0 +1,11 @@
+{
+  "name": "WebAR Demo",
+  "description": "WebAR MEP Component Placement Demo",
+  "requestFramePermissions": [
+    "camera",
+    "xr-spatial-tracking"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
