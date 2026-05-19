@@ -2,10 +2,11 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
+import basicSsl from '@vitejs/plugin-basic-ssl';
 
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), tailwindcss(), basicSsl()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
@@ -18,10 +19,12 @@ export default defineConfig(() => {
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
       allowedHosts: [
+        '.ngrok-free.app',
+        '.ngrok-free.dev',
         'figurine-quartet-pope.ngrok-free.dev'
       ],
 
-      host: '0.0.0.0',
+     host: '0.0.0.0',
     },
   };
 });
