@@ -66,8 +66,8 @@ export default function ARView({
     
     // Note: Kept path syntax matching typical production project asset routing architectures.
     // Ensure file lives directly in public/ directory (e.g. public/model1.glb).
-    //loader.load('${import.meta.env.BASE_URL}model1.glb', (gltf) => {
-      loader.load('./model1.glb', (gltf) => {
+      loader.load(`${import.meta.env.BASE_URL}model1.glb`, (gltf) => {
+      //loader.load('./model1.glb', (gltf) => {
       const myModel = gltf.scene;
       
       // Configuration parameters matching your framework requirements
