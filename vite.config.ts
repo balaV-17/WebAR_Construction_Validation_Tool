@@ -7,6 +7,7 @@ import basicSsl from '@vitejs/plugin-basic-ssl';
 export default defineConfig(() => {
   return {
     plugins: [react(), tailwindcss(), basicSsl()],
+    base: '/WebAR_Construction_Validation_Tool/',
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
@@ -18,13 +19,7 @@ export default defineConfig(() => {
       hmr: process.env.DISABLE_HMR !== 'true',
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
-      allowedHosts: [
-        '.ngrok-free.app',
-        '.ngrok-free.dev',
-        'figurine-quartet-pope.ngrok-free.dev'
-      ],
-
-     host: '0.0.0.0',
+     
     },
   };
 });
