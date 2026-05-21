@@ -2,225 +2,142 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-
-import React, { useState, useRef, useEffect } from 'react';
-import ARView from './components/ARView';
-import { 
-  Building2, 
-  Layers, 
-  ArrowDownToLine, 
-  Wrench, 
-  Droplet, 
-  Zap, 
-  Flame,
-  Plus,
-  Undo,
-  Redo,
-  Ban,
-  Maximize
-} from 'lucide-react';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
-
-export type FloorState = { f1: boolean; f2: boolean; f3: boolean; f7: boolean };
-export type SystemType = 'HVAC' | 'Plumb' | 'Elec' | 'Fire' | null;
+import React, { useState, useRef } from 'react';
+import { Sparkles } from 'lucide-react';
+import { ARState } from './types';
+import ARView from './components/ARView'; 
+import HeaderNav from './components/HeaderNav';
+import FloorSelector from './components/FloorSelector';
+import LayerControls from './components/LayerControls';
+import PlaceBuildingControls from './components/PlaceBuildingControls';
 
 export default function App() {
-  const [floors, setFloors] = useState<FloorState>({ f1: true, f2: true, f3: true, f7: true });
-  const [teleported, setTeleported] = useState<boolean>(false);
-  const [activeSystem, setActiveSystem] = useState<SystemType>(null);
-  const [selectedModel, setSelectedModel] = useState<string | null>(null);
-  const [hasReticle, setHasReticle] = useState(false);
-  const [canUndo, setCanUndo] = useState(false);
-  const [canRedo, setCanRedo] = useState(false);
+  const [state, setState] = useState<ARState>({
+    scale: 1.0, opacity: 0.85, posX: 260, posY: 240, rotation: 0, 
+    selectedFloor: 0, isArMode: false, isLocked: false, isPlaced: false,
+    layers: { foundations: false, columns: true, beams: true, floors: false }
+  });
 
-  const activeFloorCount = Object.values(floors).filter(Boolean).length;
-  const canTeleport = activeFloorCount === 1;
+  const [isNavOpen, setIsNavOpen] = useState(false);
+  const [isLayersOpen, setIsLayersOpen] = useState(false);
 
-  const toggleFloor = (floor: keyof FloorState) => {
-    setFloors(prev => ({ ...prev, [floor]: !prev[floor] }));
-    setTeleported(false); // Reset teleport on floor change
+  const positionHistory = useRef<{ x: number; y: number }[]>([]);
+  const redoHistory = useRef<{ x: number; y: number }[]>([]);
+
+  const handleMove = (dir: 'up' | 'down' | 'left' | 'right') => {
+    if (state.isLocked || state.selectedFloor === 0) return;
+    const stepSize = 15;
+    setState((prev) => {
+      let dx = 0; let dy = 0;
+      if (dir === 'left') dx = -stepSize;
+      if (dir === 'right') dx = stepSize;
+      if (dir === 'up') dy = -stepSize;
+      if (dir === 'down') dy = stepSize;
+      positionHistory.current.push({ x: prev.posX, y: prev.posY });
+      if (positionHistory.current.length > 30) positionHistory.current.shift();
+      redoHistory.current = [];
+      return { ...prev, posX: prev.posX + dx, posY: prev.posY + dy };
+    });
   };
 
-  const toggleAllFloors = () => {
-    const allOn = activeFloorCount === 4;
-    setFloors({ f1: !allOn, f2: !allOn, f3: !allOn, f7: !allOn });
-    setTeleported(false);
+  const handleUndoPlacement = () => {
+    if (positionHistory.current.length === 0) return;
+    const prevPos = positionHistory.current.pop();
+    if (prevPos) {
+      redoHistory.current.push({ x: state.posX, y: state.posY });
+      setState((prev) => ({ ...prev, posX: prevPos.x, posY: prevPos.y }));
+    }
   };
 
-  const activeFloorEntry = Object.entries(floors).find(([_, v]) => v);
-  const activeFloorKey: keyof FloorState | null = (canTeleport && activeFloorEntry) ? (activeFloorEntry[0] as keyof FloorState) : null;
-
-  // Event handlers to communicate with ARView
-  const handlePlace = () => {
-    window.dispatchEvent(new CustomEvent('ar-action-place', { detail: { system: activeSystem } }));
-  };
-  const handleClear = () => {
-    // Note on CLR: Clicking this dispatches the clear event immediately.
-    // We removed the javascript `confirm()` dialog because modal popups often
-    // break or freeze active WebXR sessions on mobile devices.
-    window.dispatchEvent(new CustomEvent('ar-action-clear'));
+  const handleRedoPlacement = () => {
+    if (redoHistory.current.length === 0) return;
+    const nextPos = redoHistory.current.pop();
+    if (nextPos) {
+      positionHistory.current.push({ x: state.posX, y: state.posY });
+      setState((prev) => ({ ...prev, posX: nextPos.x, posY: nextPos.y }));
+    }
   };
 
-  useEffect(() => {
-    const handleSelected = (e: any) => setSelectedModel(e.detail.id);
-    const handleReticle = (e: any) => setHasReticle(e.detail.visible);
-    const handleHistory = (e: any) => {
-        setCanUndo(e.detail.canUndo);
-        setCanRedo(e.detail.canRedo);
-    };
-    
-    window.addEventListener('ar-model-selected', handleSelected);
-    window.addEventListener('ar-reticle-update', handleReticle);
-    window.addEventListener('ar-history-update', handleHistory);
-    return () => {
-      window.removeEventListener('ar-model-selected', handleSelected);
-      window.removeEventListener('ar-reticle-update', handleReticle);
-      window.removeEventListener('ar-history-update', handleHistory);
-    };
-  }, []);
+  const handleClearScene = () => {
+    setState((prev) => ({
+      ...prev, posX: 260, posY: 240, scale: 1.0, rotation: 0,
+      selectedFloor: 0, isPlaced: false, isLocked: false,
+      layers: { foundations: false, columns: true, beams: true, floors: false }
+    }));
+    setIsNavOpen(false); setIsLayersOpen(false);
+    positionHistory.current = []; redoHistory.current = [];
+  };
 
   return (
-    <div className="w-full h-full bg-slate-900 text-slate-200 font-sans flex items-center justify-center overflow-hidden absolute inset-0">
+    <div className="h-screen w-screen overflow-hidden bg-[#020617] text-slate-100 font-sans relative select-none">
       
-      {/* 3D / AR Viewport */}
-      <ARView 
-        floors={floors}
-        teleportedFloor={teleported ? activeFloorKey : null}
-        activeSystem={activeSystem}
-      />
+      {/* IMMERSIVE AR ENGINE */}
+      <ARView state={state} onChangeState={setState} />
 
-      {/* DOM Overlay UI for WebXR */}
-      <div id="ar-overlay" className="absolute inset-0 pointer-events-none flex flex-col justify-between p-4 z-20">
+      {/* WEBXR DOM OVERLAY CONTAINER */}
+      <div id="ar-overlay" className="absolute inset-0 z-10 p-4 md:p-8 flex flex-col justify-between h-full pointer-events-none">
         
-        {/* Top: Status & Systems */}
-        <div className="flex flex-col gap-4 pointer-events-auto w-full max-w-3xl mx-auto">
-          {/* Top Bar Status */}
-          <div className="bg-slate-800/90 backdrop-blur-md rounded-2xl p-3 border border-slate-700/50 flex justify-between items-center shadow-lg">
-             <div className="flex items-center gap-3">
-               <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
-               <span className="text-xs font-bold tracking-wider uppercase text-slate-300">AR Active</span>
-             </div>
-             <div className="text-xs font-mono text-slate-400">
-               {teleported ? `TELEPORTED: ${activeFloorKey?.toUpperCase()}` : 'OVERVIEW'}
-             </div>
-          </div>
-
-          {/* System Toggle Bar */}
-          <div className="flex justify-center gap-2">
-            {[
-              { id: 'HVAC', color: 'bg-blue-500', activeBg: 'bg-blue-500/20', border: 'border-blue-500/50', icon: Wrench },
-              { id: 'Plumb', color: 'bg-red-500', activeBg: 'bg-red-500/20', border: 'border-red-500/50', icon: Droplet },
-              { id: 'Elec', color: 'bg-yellow-500', activeBg: 'bg-yellow-500/20', border: 'border-yellow-500/50', icon: Zap },
-              { id: 'Fire', color: 'bg-orange-500', activeBg: 'bg-orange-500/20', border: 'border-orange-500/50', icon: Flame },
-            ].map(sys => {
-              const isActive = activeSystem === sys.id;
-              const Icon = sys.icon;
-              return (
-                <button
-                  key={sys.id}
-                  onClick={() => setActiveSystem(isActive ? null : sys.id as SystemType)}
-                  className={cn(
-                    "flex flex-col items-center justify-center p-3 rounded-2xl border transition-all duration-200",
-                    "w-16 h-16 shadow-lg backdrop-blur-md",
-                    isActive ? cn(sys.activeBg, sys.border, "shadow-[0_0_15px_rgba(0,0,0,0.2)]") : "bg-slate-800/80 border-slate-700/50 text-slate-400 hover:bg-slate-700"
-                  )}
-                >
-                  <Icon size={20} className={isActive ? sys.color.replace('bg-', 'text-') : ''} />
-                  <span className={cn("text-[9px] font-bold uppercase mt-1.5", isActive ? "text-white" : "")}>{sys.id}</span>
-                </button>
-              )
-            })}
-          </div>
+        {/* Top Header Always Visible */}
+        <div className="w-full flex justify-between items-start pointer-events-auto">
+          <HeaderNav state={state} onRedoPlacement={handleRedoPlacement} onUndoPlacement={handleUndoPlacement} onClearScene={handleClearScene} />
         </div>
 
-        {/* Right side: Floor Toggle Bar */}
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 pointer-events-auto">
-          <div className="bg-slate-800/90 backdrop-blur-md rounded-2xl p-2 border border-slate-700/50 flex flex-col gap-2 shadow-xl">
-            <button
-              onClick={toggleAllFloors}
-              className={cn("w-12 h-12 rounded-xl flex flex-col items-center justify-center transition-all", activeFloorCount === 4 ? "bg-emerald-500 text-slate-900 font-bold" : "bg-slate-700 text-slate-300")}
-            >
-              <Layers size={18} />
-              <span className="text-[9px] uppercase mt-0.5">All</span>
-            </button>
-            <div className="w-8 h-px bg-slate-700 mx-auto"></div>
-            {['f7', 'f3', 'f2', 'f1'].map(f => {
-              const isOn = floors[f as keyof FloorState];
-              return (
-                <button
-                  key={f}
-                  onClick={() => toggleFloor(f as keyof FloorState)}
-                  className={cn("w-12 h-12 rounded-xl flex items-center justify-center font-bold text-sm transition-all", isOn ? "bg-emerald-500 text-slate-900" : "bg-slate-700 text-slate-300")}
-                >
-                  {f.toUpperCase()}
-                </button>
-              )
-            })}
-            <div className="w-8 h-px bg-slate-700 mx-auto"></div>
-            <button
-              onClick={() => canTeleport && setTeleported(!teleported)}
-              disabled={!canTeleport}
-              className={cn(
-                "w-12 h-12 rounded-xl flex flex-col items-center justify-center transition-all",
-                teleported ? "bg-amber-500 text-slate-900 shadow-[0_0_15px_rgba(245,158,11,0.5)]" : 
-                canTeleport ? "bg-slate-700 text-white hover:bg-slate-600" : "opacity-30 cursor-not-allowed bg-slate-800 text-slate-500 text-slate-500"
-              )}
-            >
-              {teleported ? <Maximize size={18} /> : <ArrowDownToLine size={18} />}
-              <span className="text-[9px] uppercase mt-0.5">{teleported ? 'Back' : 'TP ↓'}</span>
-            </button>
-          </div>
-        </div>
+        {/* Center UI BEFORE AR Starts - Perfectly matches your design */}
+        {!state.isArMode && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div id="ar-button-container" className="relative pointer-events-auto bg-slate-950/95 border-2 border-slate-700/80 p-6 md:p-10 rounded-2xl text-center flex flex-col items-center gap-4 select-none transition-all">
+              <h2 className="text-xl md:text-2xl font-extrabold tracking-widest text-slate-100 uppercase">
+                Enter AR Mode
+              </h2>
+              
+              <div className="flex items-center gap-4 text-slate-300">
+                <div className="border border-slate-700/80 rounded p-1 px-2 flex items-center justify-center text-xs gap-1">
+                  <span className="text-[9px] text-zinc-500">⎾</span>
+                  <Sparkles className="w-4 h-4 text-cyan-400" />
+                  <span className="text-[9px] text-zinc-500">⎿</span>
+                </div>
+                <div className="border border-slate-700/80 rounded p-1 px-2 flex items-center justify-center text-xs gap-1">
+                  <span className="text-[9px] text-zinc-500">⎡</span>
+                  <div className="w-1 h-3.5 bg-emerald-500 rounded-sm" />
+                  <span className="text-[9px] text-zinc-500">⎦</span>
+                </div>
+              </div>
 
-        {/* Bottom: Action Bar */}
-        <div className="pointer-events-auto flex justify-center w-full max-w-xl mx-auto mb-16">
-          <div className="bg-slate-800/90 backdrop-blur-md rounded-2xl p-2 border border-slate-700/50 flex gap-2 shadow-xl items-center">
-            <button
-              onClick={handlePlace}
-              disabled={!hasReticle}
-              className={cn(
-                "px-6 py-4 rounded-xl flex items-center gap-2 font-bold uppercase transition-all",
-                hasReticle ? "bg-emerald-500 text-slate-900 hover:bg-emerald-400" : "bg-slate-800 text-slate-600 cursor-not-allowed border-2 border-slate-700 border-dashed"
-              )}
-            >
-              <Plus size={20} />
-              <span>{activeSystem ? `Place ${activeSystem}` : 'Place Bldg'}</span>
-            </button>
-            <div className="w-px h-10 bg-slate-700 mx-1"></div>
+              <p className="text-[8px] md:text-[9.5px] font-mono tracking-wider opacity-60 text-slate-400 max-w-xs leading-normal">
+                ACTIVE OVERLAY TO INTEGRATE BIM STRUCTURES
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* HUD CONTROLS AFTER AR STARTS */}
+        {state.isArMode && (
+          <div className="w-full flex items-end justify-between gap-4 mt-auto">
             
-            <button 
-              onClick={() => window.dispatchEvent(new CustomEvent('ar-action-undo'))}
-              disabled={!canUndo}
-              className={cn("w-14 h-14 rounded-xl flex flex-col items-center justify-center transition-all", canUndo ? "bg-slate-700 text-white hover:bg-slate-600" : "opacity-30 bg-slate-800")}
-            >
-              <Undo size={18} />
-              <span className="text-[9px] uppercase mt-1">Undo</span>
-            </button>
-            <button 
-              onClick={() => window.dispatchEvent(new CustomEvent('ar-action-redo'))}
-              disabled={!canRedo}
-              className={cn("w-14 h-14 rounded-xl flex flex-col items-center justify-center transition-all", canRedo ? "bg-slate-700 text-white hover:bg-slate-600" : "opacity-30 bg-slate-800")}
-            >
-              <Redo size={18} />
-              <span className="text-[9px] uppercase mt-1">Redo</span>
-            </button>
-            <button 
-              onClick={handleClear}
-              className="w-14 h-14 rounded-xl flex flex-col items-center justify-center text-slate-400 hover:bg-slate-700 transition-all bg-slate-800/50"
-            >
-              <Ban size={18} />
-              <span className="text-[9px] uppercase mt-1">Clr</span>
-            </button>
-          </div>
-        </div>
+            <div className="flex flex-col gap-3 items-start pointer-events-auto w-[130px] md:w-[190px]">
+              <FloorSelector state={state} isOpen={isNavOpen} onToggle={() => setIsNavOpen(!isNavOpen)} onSelectFloor={(f) => setState(p => ({ ...p, selectedFloor: f }))} onResetFloor={() => setState(p => ({ ...p, selectedFloor: 0 }))} onMove={handleMove} />
+              <div className="bg-slate-950/95 p-1.5 md:p-3 rounded-2xl border-2 border-slate-700/80 select-none w-full shadow-lg">
+                <input type="range" min="0.10" max="2.00" step="0.05" value={state.scale} onChange={(e) => setState(p => ({ ...p, scale: Number(e.target.value) }))} className="w-full accent-white bg-slate-800 h-1 rounded-lg" />
+              </div>
+            </div>
 
+            <div className="flex flex-col items-center gap-2 pointer-events-auto relative -top-3 w-full max-w-[130px] md:max-w-[190px]">
+              <PlaceBuildingControls state={state} onChangeState={setState} />
+              <div className="bg-slate-950/95 p-1.5 md:p-2.5 rounded-2xl border-2 border-slate-700/80 select-none relative w-full">
+                <input type="range" min="-180" max="180" step="1" value={state.rotation} onChange={(e) => setState(p => ({ ...p, rotation: Number(e.target.value) }))} className="w-full accent-cyan-400 bg-slate-800 h-1 rounded-lg" />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 items-end pointer-events-auto w-[130px] md:w-[190px]">
+              <LayerControls state={state} isOpen={isLayersOpen} onToggle={() => setIsLayersOpen(!isLayersOpen)} onToggleLayer={(k) => setState(p => ({ ...p, layers: { ...p.layers, [k]: !p.layers[k] } }))} />
+              <div className="bg-slate-950/95 p-1.5 md:p-3 rounded-2xl border-2 border-slate-700/80 select-none relative w-full shadow-lg">
+                <input type="range" min="0.00" max="1.00" step="0.05" value={state.opacity} onChange={(e) => setState(p => ({ ...p, opacity: Number(e.target.value) }))} className="w-full accent-cyan-400 bg-slate-800 h-1 rounded-lg" />
+              </div>
+            </div>
+
+          </div>
+        )}
       </div>
     </div>
   );
 }
-
