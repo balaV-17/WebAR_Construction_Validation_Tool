@@ -10,7 +10,9 @@ export default function DpadController({
   state,
   onMove,
 }: DpadControllerProps) {
-  const isMovementDisabled = state.isLocked || state.selectedFloor === 0;
+  
+  // FIX: Movement is only disabled if the building isn't placed OR no floor is selected!
+  const isMovementDisabled = !state.isPlaced || state.selectedFloor === 0;
 
   return (
     <div className="flex flex-col items-center justify-center select-none w-full">
@@ -19,7 +21,9 @@ export default function DpadController({
           MOVEMENT
         </h3>
         <p className="text-[7.5px] md:text-[8px] font-bold font-mono tracking-widest mt-1 uppercase leading-none">
-          {state.selectedFloor === 0 ? (
+          {!state.isPlaced ? (
+             <span className="text-rose-500">PLACE BLDG FIRST</span>
+          ) : state.selectedFloor === 0 ? (
             <span className="text-amber-500">UNAVAILABLE</span>
           ) : (
             <span className="text-emerald-400">FLR {state.selectedFloor} ACTIVE</span>
@@ -32,44 +36,17 @@ export default function DpadController({
           ? 'border-slate-800 opacity-30 pointer-events-none' 
           : 'border-slate-500 hover:border-emerald-400'
       }`}>
-        <button
-          onClick={() => !isMovementDisabled && onMove('up')}
-          disabled={isMovementDisabled}
-          className="absolute top-0.5 w-10 h-8 md:w-12 md:h-10 flex items-center justify-center rounded-t-full hover:bg-white/10 active:bg-white/15 text-slate-100 disabled:pointer-events-none"
-        >
-          <svg className="w-5 h-5 md:w-6 md:h-6 pointer-events-none active:scale-95" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
-          </svg>
+        <button onClick={() => !isMovementDisabled && onMove('up')} disabled={isMovementDisabled} className="absolute top-0.5 w-10 h-8 md:w-12 md:h-10 flex items-center justify-center rounded-t-full hover:bg-white/10 active:bg-white/15 text-slate-100 disabled:pointer-events-none">
+          <svg className="w-5 h-5 md:w-6 md:h-6 pointer-events-none active:scale-95" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
         </button>
-
-        <button
-          onClick={() => !isMovementDisabled && onMove('left')}
-          disabled={isMovementDisabled}
-          className="absolute left-0.5 w-8 h-10 md:w-10 md:h-12 flex items-center justify-center rounded-l-full hover:bg-white/10 active:bg-white/15 text-slate-100 disabled:pointer-events-none"
-        >
-          <svg className="w-5 h-5 md:w-6 md:h-6 pointer-events-none active:scale-95" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
+        <button onClick={() => !isMovementDisabled && onMove('left')} disabled={isMovementDisabled} className="absolute left-0.5 w-8 h-10 md:w-10 md:h-12 flex items-center justify-center rounded-l-full hover:bg-white/10 active:bg-white/15 text-slate-100 disabled:pointer-events-none">
+          <svg className="w-5 h-5 md:w-6 md:h-6 pointer-events-none active:scale-95" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
         </button>
-
-        <button
-          onClick={() => !isMovementDisabled && onMove('right')}
-          disabled={isMovementDisabled}
-          className="absolute right-0.5 w-8 h-10 md:w-10 md:h-12 flex items-center justify-center rounded-r-full hover:bg-white/10 active:bg-white/15 text-slate-100 disabled:pointer-events-none"
-        >
-          <svg className="w-5 h-5 md:w-6 md:h-6 pointer-events-none active:scale-95" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
+        <button onClick={() => !isMovementDisabled && onMove('right')} disabled={isMovementDisabled} className="absolute right-0.5 w-8 h-10 md:w-10 md:h-12 flex items-center justify-center rounded-r-full hover:bg-white/10 active:bg-white/15 text-slate-100 disabled:pointer-events-none">
+          <svg className="w-5 h-5 md:w-6 md:h-6 pointer-events-none active:scale-95" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
         </button>
-
-        <button
-          onClick={() => !isMovementDisabled && onMove('down')}
-          disabled={isMovementDisabled}
-          className="absolute bottom-0.5 w-10 h-8 md:w-12 md:h-10 flex items-center justify-center rounded-b-full hover:bg-white/10 active:bg-white/15 text-slate-100 disabled:pointer-events-none"
-        >
-          <svg className="w-5 h-5 md:w-6 md:h-6 pointer-events-none active:scale-95" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-          </svg>
+        <button onClick={() => !isMovementDisabled && onMove('down')} disabled={isMovementDisabled} className="absolute bottom-0.5 w-10 h-8 md:w-12 md:h-10 flex items-center justify-center rounded-b-full hover:bg-white/10 active:bg-white/15 text-slate-100 disabled:pointer-events-none">
+          <svg className="w-5 h-5 md:w-6 md:h-6 pointer-events-none active:scale-95" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
         </button>
 
         <div className="w-6 h-6 md:w-8 md:h-8 rounded-full border border-slate-650 bg-slate-950 flex items-center justify-center">

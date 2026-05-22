@@ -19,9 +19,10 @@ export default function ARView({ state, onChangeState }: ARViewProps) {
   
   const navPointsRef = useRef<Record<string, THREE.Vector3>>({
     nav1: new THREE.Vector3(), nav2: new THREE.Vector3(), nav3: new THREE.Vector3(),
+    Reset: new THREE.Vector3(),
   });
 
-  // Sync Visibilities & Opacity
+  // Layer Visibility Sync
   useEffect(() => {
     if (!sceneRef.current || !modelGroupRef.current) return;
     const mapping: Record<keyof ARState['layers'], string> = {
@@ -41,33 +42,52 @@ export default function ARView({ state, onChangeState }: ARViewProps) {
     });
   }, [state.layers, state.opacity]);
 
-  // Sync Transform & Placement
+  // FIX 4: Separated Placement Logic - Runs ONLY ONCE when Place Building is clicked to lock perfectly to physical world
   useEffect(() => {
-    if (!modelGroupRef.current) return;
-    modelGroupRef.current.scale.setScalar(state.scale);
-    modelGroupRef.current.rotation.y = THREE.MathUtils.degToRad(state.rotation);
-    
-    const transX = (state.posX - 260) * 0.005;
-    const transZ = (state.posY - 240) * 0.005;
-    let transY = 0;
-    
-    if (state.selectedFloor > 0) {
-      const navKey = `nav${state.selectedFloor}`;
-      const targetAnchor = navPointsRef.current[navKey];
-      if (targetAnchor) transY = -targetAnchor.y; 
-    }
-    modelGroupRef.current.position.set(transX, transY, transZ);
-    modelGroupRef.current.updateMatrix();
-
     if (state.isPlaced && anchorGroupRef.current && reticleRef.current?.visible) {
-      anchorGroupRef.current.matrix.copy(reticleRef.current.matrix);
+      anchorGroupRef.current.position.setFromMatrixPosition(reticleRef.current.matrix);
+      anchorGroupRef.current.quaternion.setFromRotationMatrix(reticleRef.current.matrix);
+      anchorGroupRef.current.updateMatrixWorld(true);
       anchorGroupRef.current.visible = true;
       reticleRef.current.visible = false;
     } else if (!state.isPlaced && anchorGroupRef.current) {
       anchorGroupRef.current.visible = false;
+      if (reticleRef.current) reticleRef.current.visible = true;
     }
-  }, [state.scale, state.rotation, state.posX, state.posY, state.selectedFloor, state.isPlaced]);
+  }, [state.isPlaced]);
 
+  // Transform & Full 3D Coordinate Teleportation Sync
+  useEffect(() => {
+    if (!modelGroupRef.current) return;
+    
+    modelGroupRef.current.scale.setScalar(state.scale);
+    modelGroupRef.current.rotation.y = THREE.MathUtils.degToRad(state.rotation);
+    
+    let transX = (state.posX - 260) * 0.005;
+    let transY = 0;
+    let transZ = (state.posY - 240) * 0.005;
+    
+    // FIX 5: Extracts the exact 3D vector coordinates from your hierarchy nodes
+    let targetAnchor: THREE.Vector3 | undefined;
+
+    if (state.selectedFloor > 0) {
+      const navKey = `nav${state.selectedFloor}`;
+      targetAnchor = navPointsRef.current[navKey]; // Points to nav1, nav2, nav3
+    } else if (state.selectedFloor === 0) {
+      targetAnchor = navPointsRef.current['Reset']; // Points exactly to your 'Reset' parent node
+    }
+    
+    if (targetAnchor) {
+      transX -= targetAnchor.x * state.scale;
+      transY -= targetAnchor.y * state.scale;
+      transZ -= targetAnchor.z * state.scale;
+    }
+    
+    modelGroupRef.current.position.set(transX, transY, transZ);
+    modelGroupRef.current.updateMatrix();
+  }, [state.scale, state.rotation, state.posX, state.posY, state.selectedFloor]);
+
+  // Main Scene Init
   useEffect(() => {
     if (!mountRef.current) return;
     const container = mountRef.current;
@@ -102,13 +122,23 @@ export default function ARView({ state, onChangeState }: ARViewProps) {
     const loader = new GLTFLoader();
     loader.load(`${import.meta.env.BASE_URL}model1.glb`, (gltf) => {
       modelGroup.add(gltf.scene);
-      ['nav1', 'nav2', 'nav3'].forEach((navName) => {
+      
+      // Wire UI to your precise hierarchy strings
+      ['nav1', 'nav2', 'nav3', 'Reset'].forEach((navName) => {
         const navObject = gltf.scene.getObjectByName(navName);
         if (navObject) {
-          navObject.getWorldPosition(navPointsRef.current[navName]);
-          navObject.visible = false;
+          const pos = new THREE.Vector3();
+          navObject.getWorldPosition(pos);
+          navPointsRef.current[navName].copy(pos);
+          // Important: We hide the child navigation nodes but keep Reset visible because it holds everything!
+          if (navName !== 'Reset') {
+             navObject.visible = false; 
+          }
         }
       });
+
+      const navFolder = gltf.scene.getObjectByName('Nav_Points');
+      if (navFolder) navFolder.visible = false;
     });
 
     const reticleGroup = new THREE.Group();
@@ -128,16 +158,14 @@ export default function ARView({ state, onChangeState }: ARViewProps) {
     let hitTestSource: XRHitTestSource | null = null;
     let hitTestSourceRequested = false;
 
-    // INVISIBLE WEBXR BUTTON TRICK
     setTimeout(() => {
       const btnContainer = document.getElementById('ar-button-container');
       const arButton = ARButton.createButton(renderer, {
         requiredFeatures: ['hit-test', 'dom-overlay'],
-        optionalFeatures: ['plane-detection'],
+        optionalFeatures: ['plane-detection', 'local-floor'],
         domOverlay: { root: document.getElementById('ar-overlay') || document.body }
       });
       
-      // Make the native button completely transparent and stretch over our custom React UI
       arButton.style.opacity = '0';
       arButton.style.position = 'absolute';
       arButton.style.top = '0';
@@ -170,6 +198,7 @@ export default function ARView({ state, onChangeState }: ARViewProps) {
           hitTestSourceRequested = true;
         }
 
+        // Reticle stops actively tracking after placed, locking the environment perfectly
         if (hitTestSource && referenceSpace && !state.isPlaced) {
           const hitTestResults = frame.getHitTestResults(hitTestSource);
           if (hitTestResults.length > 0 && reticleRef.current) {
