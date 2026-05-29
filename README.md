@@ -1,97 +1,128 @@
-# WebAR MEP Component Placement System
+```markdown
+# WebAR Construction Validation Tool — IFC WebXR Viewer
 
-A production-grade WebXR application that allows construction professionals to place, visualize, and interact with 3D MEP (Mechanical, Electrical, Plumbing) components and building structures directly onto real-world surfaces using Augmented Reality.
+A React + Three.js + WebXR viewer for IFC building models. Loads GLB files from the IFC pipeline and provides AR placement with storey/category toggles.
 
-## 🌟 Concept
+## Quick Start
 
-This application bridges the gap between digital BIM (Building Information Modeling) and real-world environments. By leveraging WebXR and Three.js, it projects architectural models and system components (like HVAC ducts, Plumbing pipes, and Electrical conduits) into physical spaces. 
+```bash
+# Clone the repository
+git clone https://github.com/your-repo/webar-construction-validation-tool.git
+cd webar-construction-validation-tool
 
-The current demo utilizes optimized placeholder geometries to represent different MEP disciplines and building floors, establishing and verifying the complex interaction model (Pointer, Spawning, Teleporting, History) before integrating heavy, detailed BIM models (`model1.glb`).
+# Install dependencies
+npm install
 
-## 🔄 App Workflow & Features
+# Copy GLB files from the IFC pipeline
+# (See the ifc-webar-spatial-pipeline README for export instructions)
 
-1. **AR Initialization**: The app asks for camera permissions and looks for physical planes (floors/tables) using WebXR Hit-Testing.
-2. **Reticle Tracking**: A green ring (reticle) appears mapped to physical surfaces.
-3. **Placing the Building via Pointer**: By default, pointing the reticle and tapping "Place Bldg" will anchor the default building structure to that location in the real world. 
-4. **Isolating Floors**: Users can quickly toggle visibility of Floor 1, 2, 3, or Floor 7 (Plum) using the right-side control panel.
-5. **Teleportation**: If exactly *one* floor is toggled on, the "TP ↓" button becomes active, allowing the user to virtually step inside that specific floor level by shifting the world.
-6. **Placing MEP Systems**: Selecting a system on the top bar (HVAC, Plumb, Elec, Fire) changes the active placement mode. Clicking "Place {System}" stamps that specific component type onto the physical anchor point.
-7. **History Management**: Users can Undo or Redo placements instantly. The "Clr" button clears all customized placements from the environment.
+# Start development server
+npm run dev
+Prerequisites
+Requirement	Version	Notes
+Node.js	18+	—
+npm	9+	—
+Android device	Chrome 81+	For WebXR AR
+Desktop	Chrome/Edge	For debugging
+WebXR Browser Support
+Platform	Support	Notes
+Android (Chrome)	✅ Full	Target platform
+Android (Edge, Firefox)	✅ Supported	Should work
+iOS (Safari)	❌ Not supported	Apple does not implement WebXR
+iOS (Any browser)	❌ Not supported	All iOS browsers use WebKit
+Desktop (Chrome/Edge)	✅ Yes	For development
+For iOS users: The app falls back to a desktop-style 3D viewer (orbit controls) when WebXR is unavailable.
 
-## 📱 User Instructions
+How to Use
+1. Prepare GLB Files
+Run the IFC to GLB pipeline to generate GLB files.
 
-### Starting the Session
-- Open the application on a WebXR-compatible mobile browser (e.g., Chrome on Android or WebXR viewer on iOS).
-- Tap the **ENTER AR** button located in the center of the screen.
+Copy the output to public/models/:
 
-### Placing the Building
-- Slowly move your phone side-to-side to scan the floor or a table.
-- Wait for the **Green Reticle** to appear.
-- Without selecting any specific MEP system, tap **PLACE BLDG** to drop the simulated building structure at the reticle's location.
-- You can move the reticle and tap "PLACE BLDG" again to instantly move the building to the new pointer location.
+text
+public/models/
+├── combinedMesh/
+│   └── building_combined.glb
+├── GroundFloor/
+├── Level_01/
+├── Level_02/
+└── ...
+2. Launch the App
+bash
+npm run dev
+Open http://localhost:5173 in your browser.
 
-### Placing Components
-- Tap an icon in the top menu (e.g., **HVAC** or **Plumb**).
-- Point the reticle at a physical surface.
-- Tap **PLACE HVAC** to spawn that component at the pointer.
+3. Enter AR Mode (Android/Desktop with Camera)
+Tap "ENTER AR MODE"
 
-### Managing Layers (Floors)
-- Use the right panel to turn different floors ON (Green) or OFF (Gray).
-- Isolate a single floor to unlock the **TP ↓ (Teleport)** feature.
+Grant camera permissions
 
-### History (Undo / Redo / Clear)
-- **Undo**: Reverts the last placement or movement.
-- **Redo**: Restores the reverted action.
-- **Clr**: Instantly hides all placed objects to reset your view. *(No confirmation dialog is used to prevent AR session breaking / freezing on mobile).*
+Point camera at a flat surface (floor, table, ground)
 
----
+4. Place the Building
+Wait for the green reticle to appear on the surface
 
-## 🛠 Integrating your own `model1.glb`
+Tap "PLACE BUILDING"
 
-When you are ready to replace the simulated building with your actual glTF model:
+The building anchors to the reticle position
 
-1. Place your `model1.glb` file into the `/public` directory of this workspace.
-2. Open `/src/components/ARView.tsx`.
-3. Locate the `// 🚀 HOW TO LOAD YOUR OWN MODEL` block around line 59.
-4. Uncomment the `GLTFLoader` code block.
-5. Ensure the nodes in your Blender/Revit file are strictly named `Mod-Floor-1`, `Mod-Floor-2`, `Mod-Floor-3`, and `Mod-Floor-7` so the UI toggles map perfectly to your hierarchy geometry.
+5. Controls
+Control	Function
+STORIES (NAV button)	Opens panel to toggle floors (GroundFloor, Level_01, etc.)
+SYSTEMS (LAYERS button)	Opens panel to toggle categories (Structure, Openings, Circulation, MEP)
+SPACES (PLACE button)	Toggles room labels overlay
+Scale slider	Adjust building size (0.1x — 2.0x)
+Rotation slider	Rotate building (-180° to 180°)
+Opacity slider	Adjust transparency (0% — 100%)
+RESET (top right)	Reset camera, toggles, and sliders
+6. Toggle Multiple Storeys
+Select L1 → building appears
 
----
+Select L2 → L2 loads on top of L1 (stacked by elevation)
 
-## 💻 Quick VS Code Setup Workspace
+Deselect L2 → L2 disappears, L1 remains
 
-To run this project locally for development or testing:
+"ALL" button → loads single combined GLB with all storeys pre-stacked
 
-### Prerequisites:
-- **VS Code**: Installed on your machine.
-- **Node.js**: Installed (18.x or later recommended).
+Project Structure
+text
+webar-construction-validation-tool/
+├── public/
+│   └── models/                    # GLB files from IFC pipeline
+├── src/
+│   ├── components/
+│   │   ├── ARView.tsx             # WebXR + Three.js core
+│   │   ├── StoreySelector.tsx     # Storey toggle UI
+│   │   ├── CategoryToggles.tsx    # System toggle UI
+│   │   ├── SpacesControls.tsx     # Placement + space labels
+│   │   └── HeaderNav.tsx          # Top bar with reset
+│   ├── utils/
+│   │   ├── materials.ts           # PBR material definitions
+│   │   ├── loadStoreyGLBs.ts      # GLB loading utilities
+│   │   ├── spacesOverlay.ts       # Room label projection
+│   │   └── storeyElevation.ts     # Storey elevation helpers
+│   ├── App.tsx                    # Main UI orchestration
+│   ├── types.ts                   # TypeScript interfaces
+│   └── index.css                  # Global styles
+├── package.json
+├── vite.config.ts
+└── README.md
+Troubleshooting
+Issue	Solution
+WebXR not available	Use Android Chrome or desktop Chrome with camera
+Models not loading	Check that GLB files are in public/models/{Storey}/
+Reticle not appearing	Ensure room is well-lit, point at a textured surface
+Model floating	Adjust opacity or use scale slider to verify model loaded
+iOS shows desktop mode	Normal — WebXR not supported on iOS
+Building for Production
+bash
+npm run build
+The output will be in the dist/ folder. Deploy to any static hosting service (GitHub Pages, Netlify, Vercel).
 
-### 1. Install & Run
-1. Open this project folder in **VS Code**.
-2. Open the integrated terminal (`Ctrl` + `~`).
-3. Install dependencies:
-   ```bash
-   npm install
-   ```
-4. Start the development server:
-   ```bash
-   npm run dev
-   ```
+Related Repository
+ifc-webar-spatial-pipeline — IFC to GLB conversion pipeline
 
-### 2. Testing WebXR Locally
-WebXR strictly requires a **Secure Context (HTTPS)** to function. Testing AR features on a local computer with a mobile device requires specific steps:
+License
+This project is for demonstration purposes as part of the BIM-AR Validation Tool assignment.
 
-**Option A (Chrome USB Port Forwarding - Android only):**
-- Connect your Android device via USB.
-- Open `chrome://inspect/#devices` on your desktop Chrome.
-- Set up port forwarding from port `3000` to `localhost:3000`.
-- Open `http://localhost:3000` on your mobile Chrome (localhost is considered secure for WebXR testing).
-
-**Option B (Vite Basic HTTPS Plugin):**
-- Install the plugin: `npm install -D @vitejs/plugin-basic-ssl`
-- Update `vite.config.ts` to include it.
-- Connect your mobile device to the same Wi-Fi network and access the secure network IP provided by Vite.
-
-**Option C (WebXR API Emulator Extension):**
-- Install the **WebXR API Emulator** extension in your desktop Chrome/Firefox browser.
-- You can test AR interactions right inside VS Code / Desktop browser without a mobile device!
+Created by Balaji Velu
