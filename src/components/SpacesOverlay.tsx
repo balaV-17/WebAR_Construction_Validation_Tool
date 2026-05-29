@@ -22,7 +22,7 @@ interface SpacesOverlayProps {
 export default function SpacesOverlay({ showSpaces, selectedStorey, storeyElevations }: SpacesOverlayProps) {
   const [spaces, setSpaces] = useState<SpaceData[]>([]);
   const overlayRef = useRef<HTMLDivElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number>(0);
 
   useEffect(() => {
     if (!showSpaces) {

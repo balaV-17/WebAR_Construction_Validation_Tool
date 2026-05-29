@@ -75,7 +75,8 @@ npm run dev
 ```
 
 * Open [http://localhost:5173](https://www.google.com/search?q=http://localhost:5173) in your target browser or host it via another provider like ngrok or github pages. 
-* Demo: 
+or use the bleow site to try it out:
+* AR Demo: https://balav-17.github.io/WebAR_Construction_Validation_Tool/
 
 
 ### 3. Enter AR Mode (Android / Supported Desktop Devices)
@@ -89,7 +90,7 @@ npm run dev
 * Wait for the green tracking reticle to lock onto and appear on the scanned surface.
 * Tap **"PLACE BUILDING"**. Make sure any storey are selected before proceeding.
 * The 3D model will instantly anchor itself to that specific real-world coordinate.
-Fell free to use the rotation sliders for desired visibility.
+Fell free to use the rotation sliders for desired perspectives.
 
 ### 5. Controller Interfaces
 
@@ -164,7 +165,7 @@ The compiled, highly optimized build output will drop straight into your local `
 
 ## Related Repository
 
-* [ifc-webar-spatial-pipeline](https://www.google.com/search?q=https://github.com/your-repo/ifc-webar-spatial-pipeline) — The automated companion IFC-to-GLB optimization pipeline engine.
+* [ifc-webar-spatial-pipeline](https://github.com/balaV-17/ifc-webar-spatial-pipeline) — The automated companion IFC-to-GLB optimization pipeline engine.
 
 ## License
 
