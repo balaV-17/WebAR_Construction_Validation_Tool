@@ -1,0 +1,227 @@
+{
+  "generator": "combine_meshV1.py",
+  "combined_glb": "building_combined.glb",
+  "coordinate_system": "Y-up (glTF/Three.js/WebXR)",
+  "units": "meters",
+  "transform_notes": "Each storey GLB already has floor at Y=0 and correct X/Z world coords. This combiner re-applies elevation_m to Y only so storeys stack vertically without shifting in X or Z.",
+  "stats": {
+    "storeys": 8,
+    "total_nodes": 23,
+    "total_vertices": 347042,
+    "total_faces": 672800,
+    "input_size_kb": 11975.3,
+    "output_size_kb": 11887.4,
+    "size_reduction_pct": 0.7
+  },
+  "storeys": [
+    {
+      "storey": "GroundFloor",
+      "elevation_m": 1.32,
+      "nodes": [
+        {
+          "node": "GroundFloor_circulation",
+          "category": "circulation",
+          "vertices": 5968,
+          "faces": 10212,
+          "source_file": "GroundFloor_circulation.glb"
+        },
+        {
+          "node": "GroundFloor_openings",
+          "category": "openings",
+          "vertices": 57528,
+          "faces": 113800,
+          "source_file": "GroundFloor_openings.glb"
+        },
+        {
+          "node": "GroundFloor_structure",
+          "category": "structure",
+          "vertices": 675,
+          "faces": 1154,
+          "source_file": "GroundFloor_structure.glb"
+        }
+      ]
+    },
+    {
+      "storey": "Level_01",
+      "elevation_m": 4.42,
+      "nodes": [
+        {
+          "node": "Level_01_01_circulation",
+          "category": "01_circulation",
+          "vertices": 12478,
+          "faces": 20768,
+          "source_file": "Level_01_circulation.glb"
+        },
+        {
+          "node": "Level_01_01_openings",
+          "category": "01_openings",
+          "vertices": 63293,
+          "faces": 125246,
+          "source_file": "Level_01_openings.glb"
+        },
+        {
+          "node": "Level_01_01_structure",
+          "category": "01_structure",
+          "vertices": 697,
+          "faces": 1202,
+          "source_file": "Level_01_structure.glb"
+        }
+      ]
+    },
+    {
+      "storey": "Level_02",
+      "elevation_m": 7.52,
+      "nodes": [
+        {
+          "node": "Level_02_02_circulation",
+          "category": "02_circulation",
+          "vertices": 9615,
+          "faces": 15250,
+          "source_file": "Level_02_circulation.glb"
+        },
+        {
+          "node": "Level_02_02_openings",
+          "category": "02_openings",
+          "vertices": 63293,
+          "faces": 125246,
+          "source_file": "Level_02_openings.glb"
+        },
+        {
+          "node": "Level_02_02_structure",
+          "category": "02_structure",
+          "vertices": 746,
+          "faces": 1280,
+          "source_file": "Level_02_structure.glb"
+        }
+      ]
+    },
+    {
+      "storey": "Level_03",
+      "elevation_m": 10.62,
+      "nodes": [
+        {
+          "node": "Level_03_03_circulation",
+          "category": "03_circulation",
+          "vertices": 9824,
+          "faces": 16012,
+          "source_file": "Level_03_circulation.glb"
+        },
+        {
+          "node": "Level_03_03_mep",
+          "category": "03_mep",
+          "vertices": 104,
+          "faces": 200,
+          "source_file": "Level_03_mep.glb"
+        },
+        {
+          "node": "Level_03_03_openings",
+          "category": "03_openings",
+          "vertices": 65559,
+          "faces": 129682,
+          "source_file": "Level_03_openings.glb"
+        },
+        {
+          "node": "Level_03_03_structure",
+          "category": "03_structure",
+          "vertices": 196,
+          "faces": 352,
+          "source_file": "Level_03_structure.glb"
+        }
+      ]
+    },
+    {
+      "storey": "Level_04",
+      "elevation_m": 13.62,
+      "nodes": [
+        {
+          "node": "Level_04_04_circulation",
+          "category": "04_circulation",
+          "vertices": 112,
+          "faces": 224,
+          "source_file": "Level_04_circulation.glb"
+        },
+        {
+          "node": "Level_04_04_mep",
+          "category": "04_mep",
+          "vertices": 11947,
+          "faces": 23822,
+          "source_file": "Level_04_mep.glb"
+        },
+        {
+          "node": "Level_04_04_openings",
+          "category": "04_openings",
+          "vertices": 38437,
+          "faces": 75994,
+          "source_file": "Level_04_openings.glb"
+        },
+        {
+          "node": "Level_04_04_structure",
+          "category": "04_structure",
+          "vertices": 187,
+          "faces": 318,
+          "source_file": "Level_04_structure.glb"
+        }
+      ]
+    },
+    {
+      "storey": "Roof",
+      "elevation_m": 0.0,
+      "nodes": [
+        {
+          "node": "Roof_openings",
+          "category": "openings",
+          "vertices": 1620,
+          "faces": 3224,
+          "source_file": "Roof_openings.glb"
+        },
+        {
+          "node": "Roof_structure",
+          "category": "structure",
+          "vertices": 252,
+          "faces": 416,
+          "source_file": "Roof_structure.glb"
+        }
+      ]
+    },
+    {
+      "storey": "OK Attika",
+      "elevation_m": 0.0,
+      "nodes": [
+        {
+          "node": "OK Attika_circulation",
+          "category": "circulation",
+          "vertices": 224,
+          "faces": 448,
+          "source_file": "OK Attika_circulation.glb"
+        }
+      ]
+    },
+    {
+      "storey": "zeHGW",
+      "elevation_m": 0.0,
+      "nodes": [
+        {
+          "node": "zeHGW_circulation",
+          "category": "circulation",
+          "vertices": 1922,
+          "faces": 3564,
+          "source_file": "zeHGW_circulation.glb"
+        },
+        {
+          "node": "zeHGW_openings",
+          "category": "openings",
+          "vertices": 1716,
+          "faces": 3296,
+          "source_file": "zeHGW_openings.glb"
+        },
+        {
+          "node": "zeHGW_structure",
+          "category": "structure",
+          "vertices": 649,
+          "faces": 1090,
+          "source_file": "zeHGW_structure.glb"
+        }
+      ]
+    }
+  ]
+}

@@ -32,7 +32,7 @@ export default function HeaderNav({
         </div>
         <div className="min-w-0">
           <h1 className="text-sm md:text-xl font-extrabold tracking-wider font-sans text-slate-100 uppercase truncate">
-            BIM-AR VALIDATION
+            IFC WEBAR SPATIAL PIPELINE
           </h1>
           <p className="text-[8.5px] md:text-[10px] font-bold tracking-widest text-emerald-400 font-mono uppercase truncate">
             Created by Balaji Velu
