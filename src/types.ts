@@ -1,7 +1,8 @@
 export interface ARState {
   scale: number;
   opacity: number;
-  rotation: number;
+  rotationY: number;
+  rotationX: number;
   positionY: number;
   activeStoreys: {
     GroundFloor: boolean;

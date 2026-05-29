@@ -2,6 +2,7 @@
 # WebAR Construction Validation Tool — IFC WebXR Viewer
 
 A React + Three.js + WebXR viewer for IFC building models. Loads GLB files from the IFC pipeline and provides AR placement with storey/category toggles.
+[Watch Demo](https://youtu.be/FvGA7irS6nE)
 
 ## Quick Start
 

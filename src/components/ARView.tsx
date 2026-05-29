@@ -41,6 +41,10 @@ export default function ARView({ state, onChangeState, storeyElevations = new Ma
   const isLoadingRef = useRef(false);
   const isStoreyChangingRef = useRef(false);
 
+  // Store the base Y position (calculated by adjustModelBottomToAnchor)
+  // so we can add positionY offset on top of it
+  const baseModelGroupYRef = useRef(0);
+
   // ── Placement flags ────────────────────────────────────────────────────────
   // CRITICAL: placement must happen INSIDE an XR frame (where hit-test results
   // are live).  React effects fire outside XR frames, so we use a ref flag that
@@ -132,6 +136,9 @@ export default function ARView({ state, onChangeState, storeyElevations = new Ma
 
     const localMinY = box.min.y - anchorWorldY;
     modelGroupRef.current.position.y = -localMinY;
+    
+    // Store the base Y position so elevation slider can add offset on top
+    baseModelGroupYRef.current = -localMinY;
 
     console.log(
       `[adjustModelBottomToAnchor] worldMin=${box.min.y.toFixed(3)} ` +
@@ -256,9 +263,13 @@ export default function ARView({ state, onChangeState, storeyElevations = new Ma
   const updateTransform = () => {
     if (!modelGroupRef.current) return;
     modelGroupRef.current.scale.setScalar(state.scale);
-    // Only overwrite rotation.y (user azimuth control).
-    // rotation.x is reserved for the IFC Z-up correction and must not be reset.
-    modelGroupRef.current.rotation.y = THREE.MathUtils.degToRad(state.rotation);
+    
+    // Apply both rotations with proper order (X, then Y, then Z)
+    // The IFC Z-up correction (Math.PI / 2 = 90°) is combined with user's vertical rotation
+    modelGroupRef.current.rotation.order = 'XYZ';
+    modelGroupRef.current.rotation.x = Math.PI / 2 + THREE.MathUtils.degToRad(state.rotationX);
+    modelGroupRef.current.rotation.y = THREE.MathUtils.degToRad(state.rotationY);
+    modelGroupRef.current.rotation.z = 0;
   };
 
 
@@ -295,7 +306,16 @@ export default function ARView({ state, onChangeState, storeyElevations = new Ma
   useEffect(() => { updateOpacity(); }, [state.opacity]);
 
   // Scale & rotation
-  useEffect(() => { updateTransform(); }, [state.scale, state.rotation]);
+  useEffect(() => { updateTransform(); }, [state.scale, state.rotationY, state.rotationX]);
+
+  // Elevation offset (positionY) — adjust model group height
+  useEffect(() => {
+    if (modelGroupRef.current) {
+      // Apply elevation offset on top of the base position calculated by adjustModelBottomToAnchor
+      modelGroupRef.current.position.y = baseModelGroupYRef.current + state.positionY;
+      console.log(`[Elevation] Base Y: ${baseModelGroupYRef.current.toFixed(2)}m, Offset: ${state.positionY.toFixed(2)}m, Total: ${(baseModelGroupYRef.current + state.positionY).toFixed(2)}m`);
+    }
+  }, [state.positionY]);
 
   
 
@@ -492,7 +512,24 @@ export default function ARView({ state, onChangeState, storeyElevations = new Ma
           const results = frame.getHitTestResults(hitTestSource);
 
           if (results.length > 0) {
-            const pose = results[0].getPose(referenceSpace)!;
+            // FLOOR-ONLY FILTER: Only accept approximately horizontal surfaces
+            // This prevents the model from jumping when reticle hits vertical walls.
+            // Check the surface normal: for floors, normal.y should be close to ±1
+            let floorPose = null;
+            for (const result of results) {
+              const pose = result.getPose(referenceSpace)!;
+              const matrix = new THREE.Matrix4().fromArray(pose.transform.matrix);
+              // Surface normal is stored in matrix column 1 (Y-axis of the surface frame)
+              const normalY = Math.abs(matrix.elements[5]); // Y component of normal
+              // Accept if surface is mostly horizontal (normal points mostly up/down)
+              if (normalY > 0.8) {
+                floorPose = pose;
+                break;
+              }
+            }
+
+            // If no floor-like surface found, use first result as fallback for reticle visualization only
+            const pose = floorPose || results[0].getPose(referenceSpace)!;
 
             // Update reticle: full pose matrix (position + surface normal).
             // The ring will tilt to match sloped surfaces — correct visual.
@@ -509,12 +546,13 @@ export default function ARView({ state, onChangeState, storeyElevations = new Ma
             //      current and valid.
             //   3. We can safely freeze the anchor matrix immediately after
             //      writing it.
-            if (pendingPlacementRef.current && anchorGroupRef.current) {
+            // IMPORTANT: Only place on floor surfaces, not walls
+            if (pendingPlacementRef.current && anchorGroupRef.current && floorPose) {
 
               // Extract ONLY the translation from the hit-test pose.
               // We deliberately discard the rotation component so the building
               // stays Y-up regardless of the detected surface's normal vector.
-              _hitMatrix.current.fromArray(pose.transform.matrix);
+              _hitMatrix.current.fromArray(floorPose.transform.matrix);
               _hitPos.current.setFromMatrixPosition(_hitMatrix.current);
 
               // Move anchor to floor hit point

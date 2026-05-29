@@ -12,7 +12,8 @@ export default function App() {
   const [state, setState] = useState<ARState>({
     scale: 1.0,
     opacity: 0.85,
-    rotation: 0,
+    rotationY: 0,
+    rotationX: -270,
     positionY: 0,
     activeStoreys: {
       GroundFloor: true,
@@ -63,7 +64,8 @@ export default function App() {
         zeHGW: false,
       },
       scale: 1.0,
-      rotation: 0,
+      rotationY: 0,
+      rotationX: 0,
       positionY: 0,
       opacity: 0.85,
       showAllStoreys: false,
@@ -200,7 +202,7 @@ export default function App() {
                   <input
                     type="range"
                     min="0.10"
-                    max="2.00"
+                    max="10.00"
                     step="0.05"
                     value={state.scale}
                     onChange={(e) =>
@@ -225,12 +227,12 @@ export default function App() {
                 onToggleSpaces={handleToggleSpaces}
               />
 
-              {/* Rotation Slider */}
+              {/* Rotate Y Slider (Horizontal Rotation) */}
               <div className="bg-slate-950/95 p-1.5 md:p-2.5 rounded-2xl border-2 border-slate-700/80 select-none relative w-full">
                 <div className="flex justify-between text-[8px] md:text-[9px] font-mono font-bold text-slate-400 uppercase tracking-wider mb-1 leading-none select-none">
-                  <span>Rotation</span>
+                  <span>Rotate Y</span>
                   <span className="text-cyan-400 font-extrabold">
-                    {state.rotation}°
+                    {state.rotationY}°
                   </span>
                 </div>
                 <div className="relative flex items-center py-0.5">
@@ -239,9 +241,9 @@ export default function App() {
                     min="-180"
                     max="180"
                     step="1"
-                    value={state.rotation}
+                    value={state.rotationY}
                     onChange={(e) =>
-                      setState((p) => ({ ...p, rotation: Number(e.target.value) }))
+                      setState((p) => ({ ...p, rotationY: Number(e.target.value) }))
                     }
                     className="w-full accent-cyan-400 bg-slate-800 h-1 rounded-lg cursor-pointer"
                   />
@@ -251,7 +253,41 @@ export default function App() {
                     -180°
                   </span>
                   <span className="text-[7px] md:text-[8px] font-bold tracking-[0.2em] text-slate-300 uppercase text-center leading-none">
-                    ROTATE
+                     (LEFT/RIGHT)
+                  </span>
+                  <span className="text-[7px] md:text-[8px] font-extrabold text-slate-500 uppercase tracking-widest leading-none">
+                    180°
+                  </span>
+                </div>
+              </div>
+
+              {/* Rotate X Slider (Vertical Rotation) */}
+              <div className="bg-slate-950/95 p-1.5 md:p-2.5 rounded-2xl border-2 border-slate-700/80 select-none relative w-full">
+                <div className="flex justify-between text-[8px] md:text-[9px] font-mono font-bold text-slate-400 uppercase tracking-wider mb-1 leading-none select-none">
+                  <span>Rotate X</span>
+                  <span className="text-emerald-400 font-extrabold">
+                    {state.rotationX}°
+                  </span>
+                </div>
+                <div className="relative flex items-center py-0.5">
+                  <input
+                    type="range"
+                    min="0"
+                    max="360"
+                    step="1"
+                    value={state.rotationX}
+                    onChange={(e) =>
+                      setState((p) => ({ ...p, rotationX: Number(e.target.value) }))
+                    }
+                    className="w-full accent-emerald-400 bg-slate-800 h-1 rounded-lg cursor-pointer"
+                  />
+                </div>
+                <div className="flex justify-between items-center px-0.5 mt-1 select-none">
+                  <span className="text-[7px] md:text-[8px] font-extrabold text-slate-500 uppercase tracking-widest leading-none">
+                    -180°
+                  </span>
+                  <span className="text-[7px] md:text-[8px] font-bold tracking-[0.2em] text-slate-300 uppercase text-center leading-none">
+                    俯仰 (UP/DOWN)
                   </span>
                   <span className="text-[7px] md:text-[8px] font-extrabold text-slate-500 uppercase tracking-widest leading-none">
                     180°
@@ -270,9 +306,9 @@ export default function App() {
                 <div className="relative flex items-center py-0.5">
                   <input
                     type="range"
-                    min="-2.0"
-                    max="5.0"
-                    step="0.05"
+                    min="-8"
+                    max="8"
+                    step="0.1"
                     value={state.positionY}
                     onChange={(e) =>
                       setState((p) => ({ ...p, positionY: Number(e.target.value) }))
