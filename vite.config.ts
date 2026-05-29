@@ -13,11 +13,7 @@ export default defineConfig(({ command }) => {
       },
     },
     server: {
-      // Allow ngrok host
-      allowedHosts: [
-        'figurine-quartet-pope.ngrok-free.dev',
-        '.ngrok-free.dev',  // Allow all ngrok domains
-      ],
+      
 
       hmr: process.env.DISABLE_HMR !== 'true',
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
