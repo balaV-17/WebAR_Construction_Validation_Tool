@@ -39,9 +39,9 @@ npm run dev
 | **Android (Edge, Firefox)** | ✅ Supported | Should work out of the box |
 | **iOS (Safari)** | ❌ Not supported | Apple does not implement the WebXR API |
 | **iOS (Any browser)** | ❌ Not supported | All iOS browsers are forced to use WebKit underneath |
-| **Desktop (Chrome/Edge)** | ✅ Yes | Great for local development & emulated testing |
+| **Desktop (Chrome/Edge)** | ✅ Supported  | WebXR works with camera but hit testing unreliable |
 
-> 💡 **For iOS Users:** The app automatically falls back to a desktop-style 3D viewer utilizing standard OrbitControls when WebXR capabilities are unavailable.
+> 💡 **For iOS Users:** The current version is not supported on iOS. Desktop Chrome/Edge have partial WebXR support but hit testing is unreliable. This project does not include a desktop fallback viewer.
 > 💡 **For Android Users:** Go to chrome setting and give permission to the site settings and then try again with the hosted link and it wil work.
 
 ---
@@ -173,7 +173,5 @@ The compiled, highly optimized build output will drop straight into your local `
 This project is exclusively for demonstration purposes as part of the BIM-AR Validation Tool academic assignment.
 
 *Created by **Balaji Velu***
-
-```
 
 ```
